@@ -87,7 +87,7 @@ const checkImage = path =>
 const loadImages = (...paths) => Promise.all(paths.map(checkImage));
 
 const displayOnCanvas = () => {
-  const size = 32;
+  const size = 64;
   const perRow = Math.floor((document.documentElement.clientWidth - 10) / size); // clientwidth is accounting scrollbar width
   const totalRows = Math.ceil(loadedImages.length / perRow);
 
