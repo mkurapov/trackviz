@@ -15,14 +15,16 @@ const checkImage = path =>
 const loadImages = (...paths) => Promise.all(paths.map(checkImage));
 
 req.addEventListener("load", d => {
-  let albumUrls = req.responseText.split("\n");
-  // Usage
+  let data = req.responseText;
+  let tracks = JSON.parse(data).tracks.reverse();
+  let albumUrls = tracks.map(t => t.url);
+
   loadImages(...albumUrls).then(imgs => {
     displayOnCanvas(imgs.map(i => i.res));
   });
 });
 
-req.open("GET", "./MaxKrus.txt");
+req.open("GET", "./MaxKrus.json");
 req.send();
 
 const displayOnCanvas = imgs => {

@@ -4,34 +4,65 @@ import requests
 import os
 import sys
 import csv
+import json
+import datetime
 
-page = 1
-lastPage = 0
 
 user = 'MaxKrus'
 timeframe = 'from=2020-01-01&to=2020-02-24'
-siteURL = f'https://www.last.fm/user/{user}/library?{timeframe}&page={str(page)}'
+siteURL = f'https://www.last.fm/user/{user}/library?{timeframe}'
 
-print(siteURL)
-isAllGathered = False
-albumUrls = []
+data = {}
+data['user'] = user
+data['tracks'] = []
+data['timeframe'] = timeframe
 
+newTracks = []
+lastSavedSong = None
+
+filename = f'{user}.json'
+
+if os.path.isfile(filename):
+    with open(filename) as userTracksFile:
+        data = json.load(userTracksFile)
+        lastSavedSong = data['tracks'][-1]
+
+
+# get total page count
 response = requests.get(siteURL)
 soup = BeautifulSoup(response.text, 'html.parser')
+totalPages = int(soup.find_all('li', class_='pagination-page')[-1].getText())
+page = 1
+hasReachedSavedTrack = False
 
-pages = soup.find_all('li', class_='pagination-page')
-lastPage = pages[len(pages) - 1].getText()
-
-while (page <= int(lastPage)):
-    print(page)
+while (page <= totalPages and (not hasReachedSavedTrack)):
+    print(f'scraping page {page}')
     siteURL = f'https://www.last.fm/user/{user}/library?{timeframe}&page={str(page)}'
     response = requests.get(siteURL)
     soup = BeautifulSoup(response.text, 'html.parser')
 
-    for a in soup.find_all('a', class_='cover-art'):
-        albumUrls.append(a.img['src'])
+    for tr in soup.find_all('tr', class_='chartlist-row'):
+        timestamp = tr.find('td', class_='chartlist-timestamp').span['title']
+        name = tr.find('td', class_='chartlist-name').a['title']
+        artist = tr.find('td', class_='chartlist-artist').a['title']
+        url = tr.img['src']
+
+        if (lastSavedSong is not None and timestamp == lastSavedSong['timestamp']):
+            hasReachedSavedTrack = True
+            break
+
+        newTracks.append({
+            'timestamp': timestamp,
+            'name': name,
+            'artist': artist,
+            'url': url
+        })
     page += 1
 
-with open(f'{user}.txt', 'w', newline='') as file:
-    for url in albumUrls:
-        file.write(url+'\n')
+# add new tracks to lists
+
+print(f'adding {len(newTracks)} new tracks')
+data['tracks'] = data['tracks'] + newTracks[::-1]
+
+with open(filename, 'w') as outfile:
+    json.dump(data, outfile)
