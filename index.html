@@ -8,23 +8,80 @@
       content="initial-scale=1,maximum-scale=1,user-scalable=no"
     />
     <style>
-        body {
-            margin: 2vw 0 0 0;
-            background: black;
-            
-        }
+      @import url("https://fonts.googleapis.com/css?family=Roboto+Mono:500,700&display=swap");
 
-        canvas {
-            margin: 0 auto;
-            position: absolute;
-            right: 0;
-            left: 0;
-        }
+      body {
+        margin: 2vw 0 0 0;
+        background: black;
+        color: white;
+        font-family: "Roboto Mono";
+      }
+
+      canvas {
+        margin: 0 auto;
+        position: absolute;
+        right: 0;
+        left: 0;
+        top: 54px;
+      }
+
+      nav {
+        position: fixed;
+        top: 0;
+        width: calc(100% - 40px);
+        background: black;
+        padding: 10px 20px;
+        display: flex;
+        align-items: center;
+        flex: 1;
+        justify-content: space-between;
+        z-index: 99;
+      }
+
+      .input-username {
+        background: transparent;
+        color: white;
+        font-size: 24px;
+        font-family: "Roboto Mono";
+        box-shadow: none;
+        width: 100%;
+      }
+
+      input {
+        -webkit-appearance: none;
+        outline: none;
+        border: none;
+      }
+
+      .status {
+        width: 500px;
+        text-align: right;
+      }
+
+      ::-webkit-scrollbar {
+        width: 11px;
+      }
+      ::-webkit-scrollbar-track {
+        background: #494949;
+        border-radius: 0px;
+      }
+      ::-webkit-scrollbar-thumb {
+        background: #000000;
+        border-radius: 0px;
+      }
     </style>
   </head>
   <body>
+    <nav>
+      <input
+        id="input-username"
+        class="input-username"
+        placeholder="Enter last.fm username & hit Enter"
+        type="text"
+      />
+      <div id="status" class="status">Welcome.</div>
+    </nav>
     <canvas id="c"></canvas>
-    <div class="info">
     <script src="main.js"></script>
   </body>
 </html>

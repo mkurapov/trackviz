@@ -1,30 +1,44 @@
+API_KEY = "56b54ab233380061bbdd39999aedef89";
+
 var canvas = document.getElementById("c");
 var ctx = canvas.getContext("2d");
+var inputEl = document.getElementById("input-username");
+const statusEl = document.getElementById("status");
 
-let songs = (API_KEY = "56b54ab233380061bbdd39999aedef89");
+const setStatus = message => {
+  statusEl.innerText = message;
+};
 
-username = "MaxKrus";
-URL = `https://ws.audioscrobbler.com/2.0/?method=user.getrecenttracks&user=${username}&api_key=${API_KEY}&format=json&limit=200`;
+inputEl.addEventListener("keydown", ev => {
+  if (ev.keyCode == 13 && ev.target.value !== username) {
+    changeUser(ev.target.value);
+  }
+});
 
-// ALBUM_IMG_BASE_URL = "https://lastfm.freetls.fastly.net/i/u/174s/";
+let username = localStorage.getItem("username") || "";
+inputEl.value = username;
+let trackList = JSON.parse(localStorage.getItem("tracks")) || [];
+
+// if (trackList.length > 0) {
+//   setStatus(`${trackList.length} tracks loaded.`);
+// }
 
 let loadedImages = [];
 let totalPages = 0;
-
-let trackList = JSON.parse(localStorage.getItem("tracks")) || [];
-
-console.log(`${trackList.length} tracks loaded from localstorage.`);
+const MAX_PAGES = 30;
 
 let newTracksToAdd = [];
 let mostRecentSavedTrack = trackList.length > 0 ? trackList[0] : null;
 let hasReachedSavedTrack = false;
+// ALBUM_IMG_BASE_URL = "https://lastfm.freetls.fastly.net/i/u/174s/";
 
-const fetchNow = page => {
+const fetchNow = (page = 1) => {
+  URL = `https://ws.audioscrobbler.com/2.0/?method=user.getrecenttracks&user=${username}&api_key=${API_KEY}&format=json&limit=200`;
   fetch(`${URL}&page=${page}`)
     .then(res => res.json())
     .then(data => {
-      totalPages = data.recenttracks["@attr"].totalPages;
-      console.log(`got page ${page} of ${totalPages}`);
+      totalPages = Math.min(data.recenttracks["@attr"].totalPages, MAX_PAGES);
+      setStatus(`Getting page ${page} of ${totalPages}`);
 
       for (let i = 0; i < data.recenttracks.track.length; i++) {
         let track = data.recenttracks.track[i];
@@ -42,16 +56,17 @@ const fetchNow = page => {
         }
       }
 
-      if (page < 50 && !hasReachedSavedTrack) {
+      if (page < totalPages && !hasReachedSavedTrack) {
         fetchNow(++page);
       } else {
-        console.log(`done. adding ${newTracksToAdd.length} new tracks`);
+        setStatus(`Added ${newTracksToAdd.length} new tracks`);
         if (newTracksToAdd.length > 0) {
-          trackList = newTracksToAdd.concat(trackList);
+          trackList = [...newTracksToAdd, ...trackList];
           localStorage.setItem("tracks", JSON.stringify(trackList));
         }
 
         let albumUrls = trackList.map(t => t.url);
+
         loadImages(...albumUrls).then(imgs => {
           loadedImages = imgs.map(i => i.res);
           displayOnCanvas();
@@ -71,11 +86,9 @@ const checkImage = path =>
 
 const loadImages = (...paths) => Promise.all(paths.map(checkImage));
 
-fetchNow(1);
-
 const displayOnCanvas = () => {
   const size = 64;
-  const perRow = Math.floor(document.documentElement.clientWidth / size); // clientwidth is accounting scrollbar width
+  const perRow = Math.floor((document.documentElement.clientWidth - 10) / size); // clientwidth is accounting scrollbar width
   const totalRows = Math.ceil(loadedImages.length / perRow);
 
   ctx.canvas.width = perRow * size;
@@ -89,6 +102,12 @@ const displayOnCanvas = () => {
       row++;
     }
   }
+
+  setStatus(`${loadedImages.length} tracks loaded`);
+};
+
+const clearCanvas = () => {
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
 };
 
 function windowResized() {
@@ -100,3 +119,26 @@ window.addEventListener("resize", () => {
   clearTimeout(debouncedResize);
   debouncedResize = setTimeout(windowResized, 200);
 });
+
+const changeUser = newUser => {
+  console.log("changing name!");
+  username = newUser;
+  localStorage.removeItem("tracks");
+  localStorage.setItem("username", username);
+  loadedImages = [];
+  trackList = [];
+  newTracksToAdd = [];
+  mostRecentSavedTrack = null;
+  hasReachedSavedTrack = false;
+
+  clearCanvas();
+  setStatus("");
+  fetchNow();
+};
+
+if (username && trackList.length > 0) {
+  console.log("we got username");
+  inputEl.value = username;
+  fetchNow();
+  setStatus("Checking recently played tracks.");
+}
