@@ -1,42 +1,64 @@
 var canvas = document.getElementById("c");
 var ctx = canvas.getContext("2d");
 
-let loadedImages = [];
 let songs = (API_KEY = "56b54ab233380061bbdd39999aedef89");
+
 username = "MaxKrus";
 URL = `http://ws.audioscrobbler.com/2.0/?method=user.getrecenttracks&user=${username}&api_key=${API_KEY}&format=json&limit=200`;
 
-let trackList = [];
+// ALBUM_IMG_BASE_URL = "https://lastfm.freetls.fastly.net/i/u/174s/";
+
+let loadedImages = [];
+let totalPages = 0;
+
+let trackList = JSON.parse(localStorage.getItem("tracks")) || [];
+
+console.log(`${trackList.length} tracks loaded from localstorage.`);
+
+let newTracksToAdd = [];
+let mostRecentSavedTrack = trackList.length > 0 ? trackList[0] : null;
+let hasReachedSavedTrack = false;
 
 const fetchNow = page => {
-  console.log(`getting page ${page}`);
   fetch(`${URL}&page=${page}`)
     .then(res => res.json())
     .then(data => {
-      trackList = trackList.concat(data.recenttracks.track);
+      totalPages = data.recenttracks["@attr"].totalPages;
+      console.log(`got page ${page} of ${totalPages}`);
 
-      if (trackList.length != 400) {
+      for (let i = 0; i < data.recenttracks.track.length; i++) {
+        let track = data.recenttracks.track[i];
+        if (
+          mostRecentSavedTrack &&
+          mostRecentSavedTrack.date == track.date.uts
+        ) {
+          hasReachedSavedTrack = true;
+          break;
+        } else {
+          newTracksToAdd.push({
+            date: track.date.uts,
+            url: track.image[2]["#text"]
+          });
+        }
+      }
+
+      if (page < 50 && !hasReachedSavedTrack) {
         fetchNow(++page);
       } else {
-        console.log("got it all yo");
-        prepAndDisplay();
+        console.log(`done. adding ${newTracksToAdd.length} new tracks`);
+        if (newTracksToAdd.length > 0) {
+          trackList = newTracksToAdd.concat(trackList);
+          localStorage.setItem("tracks", JSON.stringify(trackList));
+        }
+
+        let albumUrls = trackList.map(t => t.url);
+        loadImages(...albumUrls).then(imgs => {
+          loadedImages = imgs.map(i => i.res);
+          displayOnCanvas();
+        });
       }
     });
 };
-
-fetchNow(1);
-
-const prepAndDisplay = () => {
-  let albumUrls = trackList.map(t => t.image[2]["#text"]);
-  loadImages(...albumUrls).then(imgs => {
-    loadedImages = imgs.map(i => i.res);
-    displayOnCanvas();
-  });
-};
-
-// let data = req.responseText;
-// let tracks = JSON.parse(data).tracks.reverse();
-// let albumUrls = tracks.map(t => t.url);
 
 const checkImage = path =>
   new Promise(resolve => {
@@ -49,8 +71,10 @@ const checkImage = path =>
 
 const loadImages = (...paths) => Promise.all(paths.map(checkImage));
 
+fetchNow(1);
+
 const displayOnCanvas = () => {
-  const size = 100;
+  const size = 64;
   const perRow = Math.floor(document.documentElement.clientWidth / size); // clientwidth is accounting scrollbar width
   const totalRows = Math.ceil(loadedImages.length / perRow);
 
