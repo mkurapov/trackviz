@@ -4,7 +4,7 @@ var ctx = canvas.getContext("2d");
 let songs = (API_KEY = "56b54ab233380061bbdd39999aedef89");
 
 username = "MaxKrus";
-URL = `http://ws.audioscrobbler.com/2.0/?method=user.getrecenttracks&user=${username}&api_key=${API_KEY}&format=json&limit=200`;
+URL = `https://ws.audioscrobbler.com/2.0/?method=user.getrecenttracks&user=${username}&api_key=${API_KEY}&format=json&limit=200`;
 
 // ALBUM_IMG_BASE_URL = "https://lastfm.freetls.fastly.net/i/u/174s/";
 
