@@ -69,6 +69,19 @@
         background: #000000;
         border-radius: 0px;
       }
+
+      #viz {
+        display: flex;
+        position: absolute;
+        width: 100%;
+        flex-wrap: wrap;
+        justify-content: center;
+      }
+
+      #viz > img {
+        height: 64px;
+        width: 64px;
+      }
     </style>
   </head>
   <body>
@@ -82,6 +95,7 @@
       <div id="status" class="status">Welcome.</div>
     </nav>
     <canvas id="c"></canvas>
+    <div id="viz"></div>
     <script src="main.js"></script>
   </body>
 </html>

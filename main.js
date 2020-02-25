@@ -1,5 +1,7 @@
 API_KEY = "56b54ab233380061bbdd39999aedef89";
 
+let usingDOM = true;
+
 var canvas = document.getElementById("c");
 var ctx = canvas.getContext("2d");
 var inputEl = document.getElementById("input-username");
@@ -25,7 +27,7 @@ let trackList = JSON.parse(localStorage.getItem("tracks")) || [];
 
 let loadedImages = [];
 let totalPages = 0;
-const MAX_PAGES = 30;
+const MAX_PAGES = 10;
 
 let newTracksToAdd = [];
 let mostRecentSavedTrack = trackList.length > 0 ? trackList[0] : null;
@@ -65,14 +67,15 @@ const fetchNow = (page = 1) => {
           localStorage.setItem("tracks", JSON.stringify(trackList));
         }
 
-        let albumUrls = trackList.map(t => t.url);
-
-        loadImages(...albumUrls).then(imgs => {
-          loadedImages = imgs.map(i => i.res);
-          displayOnCanvas();
-        });
+        loadIntoMemory().then(() => render());
       }
     });
+};
+
+const loadIntoMemory = () => {
+  return loadImages(...trackList.map(t => t.url)).then(imgs => {
+    loadedImages = imgs.map(i => i.res);
+  });
 };
 
 const checkImage = path =>
@@ -87,6 +90,7 @@ const checkImage = path =>
 const loadImages = (...paths) => Promise.all(paths.map(checkImage));
 
 const displayOnCanvas = () => {
+  setStatus(`rendering images`);
   const size = 64;
   const perRow = Math.floor((document.documentElement.clientWidth - 10) / size); // clientwidth is accounting scrollbar width
   const totalRows = Math.ceil(loadedImages.length / perRow);
@@ -101,17 +105,37 @@ const displayOnCanvas = () => {
     if (i > 0 && i % perRow == 0) {
       row++;
     }
+    // console.log(`track ${i} of ${loadedImages.length} loaded.`);
   }
 
   setStatus(`${loadedImages.length} tracks loaded`);
 };
 
-const clearCanvas = () => {
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
+const displayOnDOM = () => {
+  // const perRow = Math.floor((document.documentElement.clientWidth - 10) / size);
+
+  let div = document.getElementById("viz");
+  for (let i = 0; i < loadedImages.length; i++) {
+    div.appendChild(loadedImages[i]);
+    // if (i > 0 && i % perRow == 0) {
+    //   row++;
+    // }
+    // console.log(`track ${i} of ${loadedImages.length} loaded.`);
+  }
+};
+
+const clearRender = () => {
+  usingDOM
+    ? (document.getElementById("viz").innerHTML = "")
+    : ctx.clearRect(0, 0, canvas.width, canvas.height);
+};
+
+const render = () => {
+  usingDOM ? displayOnDOM() : displayOnCanvas();
 };
 
 function windowResized() {
-  displayOnCanvas();
+  render();
 }
 
 let debouncedResize;
@@ -131,7 +155,8 @@ const changeUser = newUser => {
   mostRecentSavedTrack = null;
   hasReachedSavedTrack = false;
 
-  clearCanvas();
+  clearRender();
+
   setStatus("");
   fetchNow();
 };
@@ -139,6 +164,7 @@ const changeUser = newUser => {
 if (username && trackList.length > 0) {
   console.log("we got username");
   inputEl.value = username;
-  fetchNow();
+  // fetchNow();
+  loadIntoMemory().then(() => render());
   setStatus("Checking recently played tracks.");
 }
