@@ -34,16 +34,22 @@ let trackList = JSON.parse(localStorage.getItem("tracks")) || [];
 
 let loadedImages = [];
 let totalPages = 0;
-const MAX_PAGES = 1;
+const MAX_PAGES = 999;
 
 let newTracksToAdd = [];
 let mostRecentSavedTrack = trackList.length > 0 ? trackList[0] : null;
 let hasReachedSavedTrack = false;
 // ALBUM_IMG_BASE_URL = "https://lastfm.freetls.fastly.net/i/u/174s/";
 
+let fetchController = new AbortController();
+let signal = fetchController.signal;
+
 const fetchNow = (page = 1) => {
   URL = `https://ws.audioscrobbler.com/2.0/?method=user.getrecenttracks&user=${username}&api_key=${API_KEY}&format=json&limit=200`;
-  fetch(`${URL}&page=${page}`)
+  fetch(`${URL}&page=${page}`, {
+    method: "GET",
+    signal: signal
+  })
     .then(res => {
       if (res.ok) {
         return res.json();
@@ -87,7 +93,14 @@ const fetchNow = (page = 1) => {
           localStorage.setItem("tracks", JSON.stringify(trackList));
         }
 
-        loadIntoMemory().then(() => render());
+        let prom = new Promise(resolve => {
+          setTimeout(() => {
+            setStatus(`Loading ${trackList.length} tracks`);
+            resolve();
+          }, 500);
+        })
+          .then(() => loadIntoMemory())
+          .then(() => render());
       }
     });
 };
@@ -144,6 +157,21 @@ const displayOnDOM = () => {
   calculateTimestamp();
 };
 
+const displayOnDOM2 = () => {
+  let div = document.getElementById("viz");
+  for (let i = 0; i < trackList.length; i++) {
+    let img = new Image();
+    img.src = trackList[i].url;
+    div.appendChild(img);
+  }
+  // setStatus(`Loaded ${loadedImages.length} tracks`);
+  isRendered = true;
+  if (!timestampEl.classList.contains("visible")) {
+    timestampEl.classList += "visible";
+  }
+  calculateTimestamp();
+};
+
 const clearRender = () => {
   isUsingDOM
     ? (document.getElementById("viz").innerHTML = "")
@@ -175,7 +203,12 @@ window.addEventListener("resize", () => {
 window.addEventListener("mousewheel", () => calculateTimestamp());
 
 const changeUser = newUser => {
-  console.log("changing name!");
+  console.log(fetchController.signal);
+  if (!fetchController.signal.aborted) {
+    fetchController.abort();
+  }
+  fetchController = new AbortController();
+  signal = fetchController.signal;
   username = newUser;
   localStorage.removeItem("tracks");
 
