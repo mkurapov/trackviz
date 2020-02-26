@@ -11,7 +11,7 @@
       @import url("https://fonts.googleapis.com/css?family=Roboto+Mono:500,700&display=swap");
 
       body {
-        margin: 2vw 0 0 0;
+        margin: 0 0 0 0;
         background: black;
         color: white;
         font-family: "Roboto Mono";
@@ -75,12 +75,25 @@
         position: absolute;
         width: 100%;
         flex-wrap: wrap;
-        justify-content: center;
+        /* justify-content: center; */
+        margin-top: 54px;
+        padding-bottom: 72px;
       }
 
       #viz > img {
         height: 64px;
         width: 64px;
+      }
+
+      #timestamp {
+        position: fixed;
+        left: 0;
+        background: black;
+        color: white;
+        padding: 20px 20px;
+        bottom: 0px;
+        text-align: center;
+        font-size: 24px;
       }
     </style>
   </head>
@@ -96,6 +109,8 @@
     </nav>
     <canvas id="c"></canvas>
     <div id="viz"></div>
+    <div id="timestamp">January 2020</div>
     <script src="main.js"></script>
+    <script src="moment.min.js"></script>
   </body>
 </html>
