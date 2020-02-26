@@ -39,8 +39,9 @@ window.addEventListener("resize", () => {
   debouncedResize = setTimeout(onWindowResize, 200);
 });
 
-window.addEventListener("mousewheel", ev => {
-  if (ev.deltaY > 0) {
+let oldScroll = 0;
+window.addEventListener("scroll", ev => {
+  if (oldScroll < window.scrollY) {
     if (!navEl.classList.contains("hidden")) {
       navEl.classList += "hidden";
     }
@@ -49,6 +50,7 @@ window.addEventListener("mousewheel", ev => {
       navEl.classList = "";
     }
   }
+  oldScroll = window.scrollY;
   calculateTimestamp();
 });
 
@@ -69,7 +71,9 @@ const loadFromLocalStorage = () => {
 
 let loadedImages = [];
 let totalPages = 0;
-const MAX_PAGES = 125;
+let totalTracks = 0;
+let tracksPerPage = 200;
+const MAX_PAGES = 4;
 
 let newTracksToAdd = [];
 let hasReachedSavedTrack = false;
@@ -79,7 +83,7 @@ let fetchController = new AbortController();
 let signal = fetchController.signal;
 
 const fetchTracks = (page = 1) => {
-  URL = `https://ws.audioscrobbler.com/2.0/?method=user.getrecenttracks&user=${username}&api_key=${API_KEY}&format=json&limit=200`;
+  URL = `https://ws.audioscrobbler.com/2.0/?method=user.getrecenttracks&user=${username}&api_key=${API_KEY}&format=json&limit=${tracksPerPage}`;
   fetch(`${URL}&page=${page}`, {
     method: "GET",
     signal: signal
@@ -93,11 +97,16 @@ const fetchTracks = (page = 1) => {
       }
     })
     .then(data => {
+      console.log(data);
       if (!totalPages) {
+        totalTracks = Math.min(
+          data.recenttracks["@attr"].total,
+          MAX_PAGES * tracksPerPage
+        );
         totalPages = Math.min(data.recenttracks["@attr"].totalPages, MAX_PAGES);
       }
       setStatus(
-        `Getting page ${page} of ${totalPages}. ` +
+        `Getting track ${page * tracksPerPage} of ${totalTracks}. ` +
           getCheekyComment(page / totalPages)
       );
 
@@ -274,7 +283,8 @@ const calculateTimestamp = () => {
 const cheekyComments = [
   "Make some tea in the meantime.",
   "Pet your dog in the meantime.",
-  "Save the world in the meantime.",
+  "Go save the world in the meantime.",
+  "The tracks are saved in your browser, you won't have to do this again.",
   "Almost there :)"
 ];
 const getCheekyComment = progress => {
