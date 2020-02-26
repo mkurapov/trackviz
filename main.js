@@ -80,7 +80,7 @@ const fetchNow = (page = 1) => {
       if (page < totalPages && !hasReachedSavedTrack) {
         fetchNow(++page);
       } else {
-        setStatus(`Added ${newTracksToAdd.length} new tracks`);
+        setStatus(`Found ${newTracksToAdd.length} new tracks`);
         if (newTracksToAdd.length > 0) {
           trackList = [...newTracksToAdd, ...trackList];
           localStorage.setItem("username", username);
@@ -216,5 +216,5 @@ if (username && trackList.length > 0) {
   inputEl.value = username;
   fetchNow();
   // loadIntoMemory().then(() => render());
-  setStatus("Checking recently played tracks.");
+  setStatus("Checking for any recently played tracks");
 }
