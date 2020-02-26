@@ -31,11 +31,13 @@
         width: calc(100% - 40px);
         background: black;
         padding: 10px 20px;
-        display: flex;
         align-items: center;
-        flex: 1;
-        justify-content: space-between;
         z-index: 99;
+        transition: transform 0.2s ease-in-out 0.5s;
+      }
+
+      nav.hidden {
+        transform: translateY(-113px);
       }
 
       .input-username {
@@ -45,6 +47,8 @@
         font-family: "Roboto Mono";
         box-shadow: none;
         width: 100%;
+        padding: 10px 0;
+        margin-bottom: 10px;
       }
 
       input {
@@ -54,8 +58,11 @@
       }
 
       .status {
-        width: 600px;
-        text-align: right;
+        margin-bottom: 10px;
+
+        /* width: 40%; */
+        /* text-align: right; */
+        font-size: 16px;
       }
 
       ::-webkit-scrollbar {
@@ -76,7 +83,7 @@
         width: 100%;
         flex-wrap: wrap;
         /* justify-content: center; */
-        margin-top: 54px;
+        margin-top: 113px;
         padding-bottom: 72px;
       }
 
@@ -101,6 +108,28 @@
 
       #timestamp.visible {
         transform: translateX(0);
+      }
+
+      @media (max-width: 768px) {
+        nav {
+          display: block;
+          padding: 20px;
+        }
+
+        #status {
+          text-align: left;
+          width: 100%;
+        }
+
+        .input-username {
+          font-size: 16px;
+          margin-bottom: 20px;
+        }
+
+        #timestamp {
+          font-size: 16px;
+          width: 100%;
+        }
       }
     </style>
   </head>

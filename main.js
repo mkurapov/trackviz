@@ -1,9 +1,10 @@
 API_KEY = "56b54ab233380061bbdd39999aedef89";
 
-var canvas = document.getElementById("c");
-var ctx = canvas.getContext("2d");
-var inputEl = document.getElementById("input-username");
-var timestampEl = document.getElementById("timestamp");
+const canvas = document.getElementById("c");
+const ctx = canvas.getContext("2d");
+const inputEl = document.getElementById("input-username");
+const navEl = document.querySelector("nav");
+const timestampEl = document.getElementById("timestamp");
 const setTimestamp = message => {
   timestampEl.innerText = message;
 };
@@ -27,7 +28,7 @@ inputEl.addEventListener("keydown", ev => {
       setStatus("Welcome");
     } else {
       username = ev.target.value;
-      fetchNow();
+      fetchTracks();
     }
   }
 });
@@ -38,7 +39,18 @@ window.addEventListener("resize", () => {
   debouncedResize = setTimeout(onWindowResize, 200);
 });
 
-window.addEventListener("mousewheel", () => displayTimestamp());
+window.addEventListener("mousewheel", ev => {
+  if (ev.deltaY > 0) {
+    if (!navEl.classList.contains("hidden")) {
+      navEl.classList += "hidden";
+    }
+  } else {
+    if (navEl.classList.contains("hidden")) {
+      navEl.classList = "";
+    }
+  }
+  calculateTimestamp();
+});
 
 // #endregion
 
@@ -57,7 +69,7 @@ const loadFromLocalStorage = () => {
 
 let loadedImages = [];
 let totalPages = 0;
-const MAX_PAGES = 100;
+const MAX_PAGES = 125;
 
 let newTracksToAdd = [];
 let hasReachedSavedTrack = false;
@@ -66,7 +78,7 @@ let hasReachedSavedTrack = false;
 let fetchController = new AbortController();
 let signal = fetchController.signal;
 
-const fetchNow = (page = 1) => {
+const fetchTracks = (page = 1) => {
   URL = `https://ws.audioscrobbler.com/2.0/?method=user.getrecenttracks&user=${username}&api_key=${API_KEY}&format=json&limit=200`;
   fetch(`${URL}&page=${page}`, {
     method: "GET",
@@ -84,7 +96,10 @@ const fetchNow = (page = 1) => {
       if (!totalPages) {
         totalPages = Math.min(data.recenttracks["@attr"].totalPages, MAX_PAGES);
       }
-      setStatus(`Getting page ${page} of ${totalPages}`);
+      setStatus(
+        `Getting page ${page} of ${totalPages}. ` +
+          getCheekyComment(page / totalPages)
+      );
 
       for (let i = 0; i < data.recenttracks.track.length; i++) {
         let track = data.recenttracks.track[i];
@@ -105,7 +120,7 @@ const fetchNow = (page = 1) => {
       }
 
       if (page < totalPages && !hasReachedSavedTrack) {
-        fetchNow(++page);
+        fetchTracks(++page);
       } else {
         onFinishedGatheringData();
       }
@@ -148,8 +163,8 @@ const checkImage = path =>
 const stopDataFetch = () => {
   if (!fetchController.signal.aborted) {
     fetchController.abort();
+    console.log("stopped fetch");
   }
-  console.log("stopped fetch");
   fetchController = new AbortController();
   signal = fetchController.signal;
 };
@@ -205,7 +220,7 @@ const displayOnDOM = () => {
   if (!timestampEl.classList.contains("visible")) {
     timestampEl.classList += "visible";
   }
-  displayTimestamp();
+  calculateTimestamp();
   isRendered = true;
 };
 
@@ -221,7 +236,7 @@ const displayOnDOM2 = () => {
   if (!timestampEl.classList.contains("visible")) {
     timestampEl.classList += "visible";
   }
-  displayTimestamp();
+  calculateTimestamp();
 };
 
 const render = () => {
@@ -244,7 +259,7 @@ const onWindowResize = () => {
   }
 };
 
-const displayTimestamp = () => {
+const calculateTimestamp = () => {
   let perc = getScrollPercent() || 0;
   let itemIndex;
   if (perc == 1) {
@@ -254,6 +269,16 @@ const displayTimestamp = () => {
   }
   let timestring = moment(trackList[itemIndex].date * 1000).format("MMMM YYYY");
   setTimestamp(timestring);
+};
+
+const cheekyComments = [
+  "Make some tea in the meantime.",
+  "Pet your dog in the meantime.",
+  "Save the world in the meantime.",
+  "Almost there :)"
+];
+const getCheekyComment = progress => {
+  return cheekyComments[Math.floor(progress * cheekyComments.length)];
 };
 
 // #endregion
@@ -274,7 +299,7 @@ const getScrollPercent = () => {
   loadFromLocalStorage();
   if (username && trackList.length > 0) {
     inputEl.value = username;
-    fetchNow();
+    fetchTracks();
     // loadIntoMemory().then(() => render());
     setStatus("Checking for any recently played tracks");
   }
