@@ -34,7 +34,7 @@ let trackList = JSON.parse(localStorage.getItem("tracks")) || [];
 
 let loadedImages = [];
 let totalPages = 0;
-const MAX_PAGES = 2;
+const MAX_PAGES = 9999;
 
 let newTracksToAdd = [];
 let mostRecentSavedTrack = trackList.length > 0 ? trackList[0] : null;
@@ -48,7 +48,7 @@ const fetchNow = (page = 1) => {
       if (res.ok) {
         return res.json();
       } else {
-        setStatus("Could not find user, pls try again");
+        setStatus("Could not find user, please check spelling");
         throw new Error("Something went wrong");
       }
     })
