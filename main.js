@@ -1,6 +1,6 @@
 API_KEY = "56b54ab233380061bbdd39999aedef89";
 
-let usingDOM = true;
+let isUsingDOM = true;
 let isRendered = false;
 var canvas = document.getElementById("c");
 var ctx = canvas.getContext("2d");
@@ -34,7 +34,7 @@ let trackList = JSON.parse(localStorage.getItem("tracks")) || [];
 
 let loadedImages = [];
 let totalPages = 0;
-const MAX_PAGES = 9999;
+const MAX_PAGES = 1;
 
 let newTracksToAdd = [];
 let mostRecentSavedTrack = trackList.length > 0 ? trackList[0] : null;
@@ -145,7 +145,7 @@ const displayOnDOM = () => {
 };
 
 const clearRender = () => {
-  usingDOM
+  isUsingDOM
     ? (document.getElementById("viz").innerHTML = "")
     : ctx.clearRect(0, 0, canvas.width, canvas.height);
   isRendered = false;
@@ -154,8 +154,9 @@ const clearRender = () => {
 const render = () => {
   isRendered = false;
   setStatus("Rendering tracks");
-
-  setTimeout(() => (usingDOM ? displayOnDOM() : displayOnCanvas()), 1000);
+  let prom = new Promise((res, rej) => {
+    setTimeout(() => (isUsingDOM ? displayOnDOM() : displayOnCanvas()), 1000);
+  });
 };
 
 function windowResized() {
