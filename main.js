@@ -12,31 +12,6 @@ const setTimestamp = message => {
 
 window.addEventListener("load", () => inputEl.focus());
 
-const months = [
-  "January",
-  "February",
-  "March",
-  "April",
-  "May",
-  "June",
-  "July",
-  "August",
-  "September",
-  "October",
-  "November",
-  "December"
-];
-
-// let observer = new IntersectionObserver(
-//   (entries, observer) => {
-//     // console.log(observer);
-//     entries.forEach(entry => {
-//       console.log(entry.target.getAttribute("data-date"));
-//     });
-//   },
-//   { rootMargin: "100% 0px" }
-// );
-
 const statusEl = document.getElementById("status");
 const setStatus = message => {
   statusEl.innerText = message;
@@ -57,13 +32,9 @@ let username = localStorage.getItem("username") || "";
 inputEl.value = username;
 let trackList = JSON.parse(localStorage.getItem("tracks")) || [];
 
-// if (trackList.length > 0) {
-//   setStatus(`${trackList.length} tracks loaded.`);
-// }
-
 let loadedImages = [];
 let totalPages = 0;
-const MAX_PAGES = 30;
+const MAX_PAGES = 2;
 
 let newTracksToAdd = [];
 let mostRecentSavedTrack = trackList.length > 0 ? trackList[0] : null;
@@ -73,7 +44,14 @@ let hasReachedSavedTrack = false;
 const fetchNow = (page = 1) => {
   URL = `https://ws.audioscrobbler.com/2.0/?method=user.getrecenttracks&user=${username}&api_key=${API_KEY}&format=json&limit=200`;
   fetch(`${URL}&page=${page}`)
-    .then(res => res.json())
+    .then(res => {
+      if (res.ok) {
+        return res.json();
+      } else {
+        setStatus("Could not find user, pls try again");
+        throw new Error("Something went wrong");
+      }
+    })
     .then(data => {
       totalPages = Math.min(data.recenttracks["@attr"].totalPages, MAX_PAGES);
       setStatus(`Getting page ${page} of ${totalPages}`);
@@ -81,7 +59,7 @@ const fetchNow = (page = 1) => {
       for (let i = 0; i < data.recenttracks.track.length; i++) {
         let track = data.recenttracks.track[i];
         if (!track.date) {
-          // happens if user is currently listening
+          // no date is possible if now playing track
           continue;
         }
 
@@ -154,16 +132,16 @@ const displayOnCanvas = () => {
 };
 
 const displayOnDOM = () => {
-  // const perRow = Math.floor((document.documentElement.clientWidth - 10) / size);
-
   let div = document.getElementById("viz");
   for (let i = 0; i < loadedImages.length; i++) {
-    // loadedImages[i].setAttribute("data-date", trackList[i].date);
     div.appendChild(loadedImages[i]);
-    // observer.observe(loadedImages[i]);
   }
-  setStatus(`Loaded ${loadedImages.length} tracks.`);
+  setStatus(`Loaded ${loadedImages.length} tracks`);
   isRendered = true;
+  if (!timestampEl.classList.contains("visible")) {
+    timestampEl.classList += "visible";
+  }
+  calculateTimestamp();
 };
 
 const clearRender = () => {
@@ -176,6 +154,7 @@ const clearRender = () => {
 const render = () => {
   isRendered = false;
   setStatus("Rendering tracks");
+
   setTimeout(() => (usingDOM ? displayOnDOM() : displayOnCanvas()), 1000);
 };
 
@@ -192,20 +171,7 @@ window.addEventListener("resize", () => {
   debouncedResize = setTimeout(windowResized, 200);
 });
 
-window.addEventListener("mousewheel", ev => {
-  let perc = getScrollPercent();
-  let itemIndex;
-  if (perc == 1) {
-    itemIndex = trackList.length - 1;
-  } else {
-    itemIndex = Math.floor(perc * trackList.length);
-  }
-  // let date = new Date();
-  // console.log(date);
-  let timestring = moment(trackList[itemIndex].date * 1000).format("MMMM YYYY");
-  // console.log(timestring);
-  setTimestamp(timestring);
-});
+window.addEventListener("mousewheel", () => calculateTimestamp());
 
 const changeUser = newUser => {
   console.log("changing name!");
@@ -219,6 +185,8 @@ const changeUser = newUser => {
   hasReachedSavedTrack = false;
 
   clearRender();
+  timestampEl.classList = "";
+  setTimestamp("");
 
   setStatus("");
   fetchNow();
@@ -232,8 +200,19 @@ function getScrollPercent() {
   return (h[st] || b[st]) / ((h[sh] || b[sh]) - h.clientHeight);
 }
 
+const calculateTimestamp = () => {
+  let perc = getScrollPercent() || 0;
+  let itemIndex;
+  if (perc == 1) {
+    itemIndex = trackList.length - 1;
+  } else {
+    itemIndex = Math.floor(perc * trackList.length);
+  }
+  let timestring = moment(trackList[itemIndex].date * 1000).format("MMMM YYYY");
+  setTimestamp(timestring);
+};
+
 if (username && trackList.length > 0) {
-  console.log("we got username");
   inputEl.value = username;
   fetchNow();
   // loadIntoMemory().then(() => render());

@@ -82,7 +82,7 @@
 
       #viz > img {
         height: 64px;
-        width: 64px;
+        width: auto;
       }
 
       #timestamp {
@@ -92,8 +92,15 @@
         color: white;
         padding: 20px 20px;
         bottom: 0px;
-        text-align: center;
+        text-align: left;
         font-size: 24px;
+        width: 216px;
+        transform: translateX(-216px);
+        transition: transform 0.2s ease-in-out 0.5s;
+      }
+
+      #timestamp.visible {
+        transform: translateX(0);
       }
     </style>
   </head>
@@ -102,7 +109,7 @@
       <input
         id="input-username"
         class="input-username"
-        placeholder="Enter last.fm username & hit Enter"
+        placeholder="Type last.fm username & hit Enter"
         type="text"
       />
       <div id="status" class="status">Welcome.</div>
