@@ -289,7 +289,7 @@ const calculateTimestamp = () => {
 };
 
 const cheekyComments = [
-  "The tracks are saved in your browser, so you'll only have to get the most recent ones next time you visit.'",
+  "The tracks are saved in your browser, so you'll only have to get the most recent ones next time you visit.",
   'Pet your dog while you wait.',
   'Or save the world in the meantime.',
   'Or make some tea?'
