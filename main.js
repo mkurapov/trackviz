@@ -14,7 +14,7 @@ const setStatus = message => {
   statusEl.innerHTML = message;
 };
 
-const initalMessageHTML = `Welcome.<br /><br />I wanted to have the experience of looking back at old photos, but for music.<br />This visualizes up to 25k of your most recent Last.fm tracks.<br />I hope you enjoy.`;
+const initalMessageHTML = `Welcome.<br /><br />I wanted to have the experience of looking back at old photos, but for music.<br />This visualizes up to 75k of your most recent Last.fm tracks.<br />I hope you enjoy.`;
 // #region EVENT LISTENERS
 
 window.addEventListener('load', () => inputEl.focus());
