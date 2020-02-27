@@ -292,7 +292,7 @@ const cheekyComments = [
   "The tracks are saved in your browser, so you won't have to do this again.",
   'Pet your dog in the meantime.',
   'Feel free to use this time to save the world.',
-  'Or make some tea?'.
+  'Or make some tea?'
 ];
 const getCheekyComment = progress => {
   return cheekyComments[Math.floor(progress * cheekyComments.length)];
