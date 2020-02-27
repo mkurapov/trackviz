@@ -117,6 +117,11 @@ const fetchTracks = (page = 1) => {
 
         let fileName = patt.exec(track.image[2]['#text'])[0];
 
+        // if missing album cover, do default lastfm
+        if (!fileName) {
+          fileName = '2a96cbd8b46e442fc41c2b86b821562f.png';
+        }
+
         newTracksToAdd.push({
           d: track.date.uts,
           fn: fileName
@@ -260,7 +265,8 @@ const displayOnDOM = () => {
     div.appendChild(loadedImages[i]);
   }
 
-  let dateFormat = 'MMMM do YYYY';
+  let dateFormat = 'MMMM Do YYYY';
+
   let mostRecentTrackTime = moment(trackList[0].d * 1000).format(dateFormat);
   let oldestTrackTime = moment(trackList[trackList.length - 1].d * 1000).format(dateFormat);
 
