@@ -6,7 +6,7 @@ const inputEl = document.getElementById('input-username');
 const navEl = document.querySelector('nav');
 const timestampEl = document.getElementById('timestamp');
 const setTimestamp = message => {
-  timestampEl.innerText = message;
+  timestampEl.innerHTML = message;
 };
 
 const statusEl = document.getElementById('status');
@@ -289,7 +289,7 @@ const calculateTimestamp = () => {
 };
 
 const cheekyComments = [
-  "The tracks are saved in your browser, so you'll only have to get the most recent ones next time you visit.",
+  "<br>The tracks are saved in your browser, so you'll only have to get the most recent ones next time you visit.",
   'Pet your dog while you wait.',
   'Save the world in the meantime.',
   'Make some coffee.',
