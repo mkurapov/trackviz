@@ -73,7 +73,7 @@ let loadedImages = [];
 let totalPages = 0;
 let totalTracks = 0;
 let tracksPerPage = 200;
-const MAX_PAGES = 2;
+const MAX_PAGES = 125;
 
 let newTracksToAdd = [];
 let hasReachedSavedTrack = false;
@@ -220,7 +220,6 @@ const displayOnDOM = () => {
   // console.log(document.body.scrollWidth, document.body.offsetWidth, document.body.clientWidth);
   const sw = document.body.scrollWidth;
   let isMobile = sw < 768;
-  console.log(isMobile);
   let mobileImgsPerRow = 10;
   let mobileImgWidth = sw / mobileImgsPerRow;
 
@@ -290,11 +289,10 @@ const calculateTimestamp = () => {
 };
 
 const cheekyComments = [
-  'Pet your dog in the meantime.',
   "The tracks are saved in your browser, so you won't have to do this again.",
+  'Pet your dog in the meantime.',
   'Feel free to use this time to save the world.',
-  'Or make some tea?',
-  'Almost there :)'
+  'Or make some tea?'.
 ];
 const getCheekyComment = progress => {
   return cheekyComments[Math.floor(progress * cheekyComments.length)];

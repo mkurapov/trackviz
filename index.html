@@ -2,8 +2,34 @@
 <html>
   <head>
     <meta charset="utf-8" />
-    <title>Last.fm viz</title>
+    <title>Last.fm Visualization</title>
     <meta name="viewport" content="initial-scale=1,maximum-scale=1,user-scalable=no" />
+
+    <meta itemprop="name" content="Last.fm Visualization" />
+    <meta itemprop="description" content="Your 25k most recent tracks" />
+    <meta itemprop="image" content="/thumbnail.png" />
+
+    <meta property="og:title" content="Last.fm Visualization" />
+    <meta property="og:site_name" content="Last.fm Visualization" />
+    <meta property="og:type" content="website" />
+    <meta property="og:description" content="Your 25k most recent tracks" />
+    <meta property="og:image" content="/thumbnail.png" />
+
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="Last.fm Visualization" />
+    <meta name="twitter:description" content="Your 25k most recent tracks" />
+    <meta name="twitter:image:alt" content="Your 25k most recent tracks" />
+
+    <script async src="https://www.googletagmanager.com/gtag/js?id=UA-75784561-8"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag() {
+        dataLayer.push(arguments);
+      }
+      gtag('js', new Date());
+
+      gtag('config', 'UA-75784561-8');
+    </script>
     <style>
       @import url('https://fonts.googleapis.com/css?family=Roboto+Mono:500,700&display=swap');
 
@@ -198,5 +224,6 @@
     <div id="timestamp">January 2020</div>
     <script src="main.js"></script>
     <script src="moment.min.js"></script>
+    <!-- Global site tag (gtag.js) - Google Analytics -->
   </body>
 </html>
