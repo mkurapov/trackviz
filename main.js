@@ -141,7 +141,7 @@ const onFinishedGatheringData = () => {
 
   let prom = new Promise(resolve => {
     setTimeout(() => {
-      setStatus(`Loading ${trackList.length} tracks`);
+      setStatus(`Rendering ${trackList.length} tracks`);
       resolve();
     }, 500);
   })
@@ -194,7 +194,6 @@ let isUsingDOM = true;
 let isRendered = false;
 
 const displayOnCanvas = () => {
-  setStatus(`rendering images`);
   const size = 64;
   const perRow = Math.floor(document.documentElement.clientWidth / size) - 2; // clientwidth is accounting scrollbar width
   const totalRows = Math.ceil(loadedImages.length / perRow);
