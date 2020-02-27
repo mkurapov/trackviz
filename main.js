@@ -76,7 +76,7 @@ let loadedImages = [];
 let totalPages = 0;
 let totalTracks = 0;
 let TRACKS_PER_PAGE = 200;
-const MAX_PAGES = 3;
+const MAX_PAGES = 375;
 
 let newTracksToAdd = [];
 let hasReachedSavedTrack = false;
