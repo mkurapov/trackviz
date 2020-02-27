@@ -3,18 +3,15 @@
   <head>
     <meta charset="utf-8" />
     <title>Last.fm viz</title>
-    <meta
-      name="viewport"
-      content="initial-scale=1,maximum-scale=1,user-scalable=no"
-    />
+    <meta name="viewport" content="initial-scale=1,maximum-scale=1,user-scalable=no" />
     <style>
-      @import url("https://fonts.googleapis.com/css?family=Roboto+Mono:500,700&display=swap");
+      @import url('https://fonts.googleapis.com/css?family=Roboto+Mono:500,700&display=swap');
 
       body {
         margin: 0 0 0 0;
         background: black;
         color: white;
-        font-family: "Roboto Mono";
+        font-family: 'Roboto Mono';
       }
 
       canvas {
@@ -30,25 +27,25 @@
         top: 0;
         width: calc(100% - 40px);
         background: black;
-        padding: 10px 20px;
+        padding: 20px 20px;
         align-items: center;
         z-index: 99;
         transition: transform 0.2s ease-in-out 0.5s;
       }
 
       nav.hidden {
-        transform: translateY(-113px);
+        transform: translateY(-136px);
       }
 
       .input-username {
         background: transparent;
         color: white;
-        font-size: 24px;
-        font-family: "Roboto Mono";
+        font-size: 32px;
+        font-family: 'Roboto Mono';
         box-shadow: none;
         width: 100%;
-        padding: 10px 0;
-        margin-bottom: 10px;
+        /* padding: 10px 0; */
+        margin-bottom: 20px;
       }
 
       input {
@@ -83,7 +80,7 @@
         width: 100%;
         flex-wrap: wrap;
         /* justify-content: center; */
-        margin-top: 113px;
+        margin-top: 136px;
         padding-bottom: 72px;
       }
 
@@ -110,6 +107,24 @@
         transform: translateX(0);
       }
 
+      /* footer {
+        padding: 10px;
+        font-size: 12px;
+        z-index: 100;
+        position: fixed;
+        top: 0;
+        text-align: right;
+        right: 0;
+      } */
+
+      .plug {
+        position: absolute;
+        bottom: 10px;
+        font-size: 10px;
+        right: 10px;
+        color: white;
+      }
+
       @media (max-width: 768px) {
         nav {
           display: block;
@@ -120,10 +135,14 @@
           transform: translateY(-133px);
         }
 
+        #viz {
+          margin-top: 114px;
+        }
+
         #viz > img {
           /* height: 4vw; */
-          height: 32px;
-          width: auto;
+          /* height: 48px; */
+          width: 48px;
         }
 
         #status {
@@ -137,24 +156,45 @@
         }
 
         #timestamp {
+          transform: translateY(61px);
           font-size: 16px;
           width: 100%;
+        }
+
+        #timestamp.visible {
+          transform: translateY(0);
+        }
+
+        .plug {
+          font-size: 8px;
+        }
+      }
+
+      @media (min-width: 1920px) {
+        #viz > img {
+          width: 4.32vw;
         }
       }
     </style>
   </head>
   <body>
     <nav>
-      <input
-        id="input-username"
-        class="input-username"
-        placeholder="Type last.fm username & hit Enter"
-        type="text"
-      />
-      <div id="status" class="status">Welcome</div>
+      <input id="input-username" class="input-username" placeholder="Type last.fm username & hit Enter" type="text" />
+
+      <div id="status" class="status">
+        Welcome.
+        <br />
+        <br />
+        I wanted to have the experience of looking back at old photos, but for music.
+        <br />
+        This visualizes up to 25k of your most recent Last.fm tracks.
+        <br />
+        I hope you enjoy.
+      </div>
     </nav>
     <canvas id="c"></canvas>
     <div id="viz"></div>
+    <a class="plug" href="https://maxs.space">made by max</a>
     <div id="timestamp">January 2020</div>
     <script src="main.js"></script>
     <script src="moment.min.js"></script>

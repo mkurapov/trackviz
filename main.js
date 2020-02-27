@@ -1,31 +1,31 @@
-API_KEY = "56b54ab233380061bbdd39999aedef89";
+API_KEY = '56b54ab233380061bbdd39999aedef89';
 
-const canvas = document.getElementById("c");
-const ctx = canvas.getContext("2d");
-const inputEl = document.getElementById("input-username");
-const navEl = document.querySelector("nav");
-const timestampEl = document.getElementById("timestamp");
+const canvas = document.getElementById('c');
+const ctx = canvas.getContext('2d');
+const inputEl = document.getElementById('input-username');
+const navEl = document.querySelector('nav');
+const timestampEl = document.getElementById('timestamp');
 const setTimestamp = message => {
   timestampEl.innerText = message;
 };
 
-const statusEl = document.getElementById("status");
+const statusEl = document.getElementById('status');
 const setStatus = message => {
   statusEl.innerText = message;
 };
 
 // #region EVENT LISTENERS
 
-window.addEventListener("load", () => inputEl.focus());
+window.addEventListener('load', () => inputEl.focus());
 
-inputEl.addEventListener("keydown", ev => {
+inputEl.addEventListener('keydown', ev => {
   if (ev.keyCode == 13 && ev.target.value !== username) {
     stopDataFetch();
     resetData();
     clearRender();
 
-    if (ev.target.value == "") {
-      setStatus("Welcome");
+    if (ev.target.value == '') {
+      setStatus('Welcome');
     } else {
       username = ev.target.value;
       fetchTracks();
@@ -34,20 +34,20 @@ inputEl.addEventListener("keydown", ev => {
 });
 
 let debouncedResize;
-window.addEventListener("resize", () => {
+window.addEventListener('resize', () => {
   clearTimeout(debouncedResize);
   debouncedResize = setTimeout(onWindowResize, 200);
 });
 
 let oldScroll = 0;
-window.addEventListener("scroll", ev => {
+window.addEventListener('scroll', ev => {
   if (oldScroll < window.scrollY) {
-    if (!navEl.classList.contains("hidden")) {
-      navEl.classList += "hidden";
+    if (!navEl.classList.contains('hidden')) {
+      navEl.classList += 'hidden';
     }
   } else {
-    if (navEl.classList.contains("hidden")) {
-      navEl.classList = "";
+    if (navEl.classList.contains('hidden')) {
+      navEl.classList = '';
     }
   }
   oldScroll = window.scrollY;
@@ -58,14 +58,14 @@ window.addEventListener("scroll", ev => {
 
 // #region GETTING DATA
 
-let username = "";
+let username = '';
 let trackList = [];
 let mostRecentSavedTrack = null;
 
 const loadFromLocalStorage = () => {
-  username = localStorage.getItem("username") || "";
+  username = localStorage.getItem('username') || '';
   inputEl.value = username;
-  trackList = JSON.parse(localStorage.getItem("tracks")) || [];
+  trackList = JSON.parse(localStorage.getItem('tracks')) || [];
   mostRecentSavedTrack = trackList.length > 0 ? trackList[0] : null;
 };
 
@@ -73,11 +73,10 @@ let loadedImages = [];
 let totalPages = 0;
 let totalTracks = 0;
 let tracksPerPage = 200;
-const MAX_PAGES = 4;
+const MAX_PAGES = 2;
 
 let newTracksToAdd = [];
 let hasReachedSavedTrack = false;
-// ALBUM_IMG_BASE_URL = "https://lastfm.freetls.fastly.net/i/u/174s/";
 
 let fetchController = new AbortController();
 let signal = fetchController.signal;
@@ -85,46 +84,40 @@ let signal = fetchController.signal;
 const fetchTracks = (page = 1) => {
   URL = `https://ws.audioscrobbler.com/2.0/?method=user.getrecenttracks&user=${username}&api_key=${API_KEY}&format=json&limit=${tracksPerPage}`;
   fetch(`${URL}&page=${page}`, {
-    method: "GET",
+    method: 'GET',
     signal: signal
   })
     .then(res => {
       if (res.ok) {
         return res.json();
       } else {
-        setStatus("Could not find user, or hit API limit :(");
-        throw new Error("Something went wrong");
+        setStatus('Could not find user, or hit API limit :(');
+        throw new Error('Something went wrong');
       }
     })
     .then(data => {
-      console.log(data);
       if (!totalPages) {
-        totalTracks = Math.min(
-          data.recenttracks["@attr"].total,
-          MAX_PAGES * tracksPerPage
-        );
-        totalPages = Math.min(data.recenttracks["@attr"].totalPages, MAX_PAGES);
+        totalTracks = Math.min(data.recenttracks['@attr'].total, MAX_PAGES * tracksPerPage);
+        totalPages = Math.min(data.recenttracks['@attr'].totalPages, MAX_PAGES);
       }
-      setStatus(
-        `Getting track ${page * tracksPerPage} of ${totalTracks}. ` +
-          getCheekyComment(page / totalPages)
-      );
+      setStatus(`Getting track ${page * tracksPerPage} of ${totalTracks}. ` + getCheekyComment(page / totalPages));
+
+      let patt = new RegExp('[^/]*$');
 
       for (let i = 0; i < data.recenttracks.track.length; i++) {
         let track = data.recenttracks.track[i];
         if (!track.date) continue; // if the track is currently playing, there is no date
 
-        if (
-          mostRecentSavedTrack &&
-          mostRecentSavedTrack.date == track.date.uts
-        ) {
+        if (mostRecentSavedTrack && mostRecentSavedTrack.date == track.date.uts) {
           hasReachedSavedTrack = true;
           break;
         }
 
+        let fileName = patt.exec(track.image[2]['#text'])[0];
+
         newTracksToAdd.push({
           date: track.date.uts,
-          url: track.image[2]["#text"]
+          fileName: fileName
         });
       }
 
@@ -136,12 +129,14 @@ const fetchTracks = (page = 1) => {
     });
 };
 
+ALBUM_IMG_BASE_URL = 'https://lastfm.freetls.fastly.net/i/u/174s/';
+
 const onFinishedGatheringData = () => {
-  setStatus(`Found ${newTracksToAdd.length} new tracks`);
+  setStatus(`Found ${newTracksToAdd.length} new track${newTracksToAdd.length == 1 ? '' : 's'}`);
   if (newTracksToAdd.length > 0) {
     trackList = [...newTracksToAdd, ...trackList];
-    localStorage.setItem("username", username);
-    localStorage.setItem("tracks", JSON.stringify(trackList));
+    localStorage.setItem('username', username);
+    localStorage.setItem('tracks', JSON.stringify(trackList));
   }
 
   let prom = new Promise(resolve => {
@@ -151,7 +146,7 @@ const onFinishedGatheringData = () => {
     }, 500);
   })
     .then(() =>
-      loadImages(...trackList.map(t => t.url)).then(imgs => {
+      loadImages(...trackList.map(t => ALBUM_IMG_BASE_URL + t.fileName)).then(imgs => {
         loadedImages = imgs.map(i => i.res);
       })
     )
@@ -163,8 +158,8 @@ const loadImages = (...paths) => Promise.all(paths.map(checkImage));
 const checkImage = path =>
   new Promise(resolve => {
     const img = new Image();
-    img.onload = () => resolve({ res: img, status: "ok" });
-    img.onerror = () => resolve({ res: img, status: "error" });
+    img.onload = () => resolve({ res: img, status: 'ok' });
+    img.onerror = () => resolve({ res: img, status: 'error' });
 
     img.src = path;
   });
@@ -172,23 +167,23 @@ const checkImage = path =>
 const stopDataFetch = () => {
   if (!fetchController.signal.aborted) {
     fetchController.abort();
-    console.log("stopped fetch");
+    console.log('stopped fetch');
   }
   fetchController = new AbortController();
   signal = fetchController.signal;
 };
 
 const resetData = () => {
-  localStorage.removeItem("tracks");
-  localStorage.removeItem("username");
+  localStorage.removeItem('tracks');
+  localStorage.removeItem('username');
   loadedImages = [];
   trackList = [];
   newTracksToAdd = [];
   mostRecentSavedTrack = null;
   hasReachedSavedTrack = false;
-  timestampEl.classList = "";
-  setTimestamp("");
-  setStatus("");
+  timestampEl.classList = '';
+  setTimestamp('');
+  setStatus('');
 };
 
 //#endregion
@@ -201,7 +196,7 @@ let isRendered = false;
 const displayOnCanvas = () => {
   setStatus(`rendering images`);
   const size = 64;
-  const perRow = Math.floor((document.documentElement.clientWidth - 10) / size); // clientwidth is accounting scrollbar width
+  const perRow = Math.floor(document.documentElement.clientWidth / size) - 2; // clientwidth is accounting scrollbar width
   const totalRows = Math.ceil(loadedImages.length / perRow);
 
   ctx.canvas.width = perRow * size;
@@ -221,20 +216,36 @@ const displayOnCanvas = () => {
 };
 
 const displayOnDOM = () => {
-  let div = document.getElementById("viz");
+  let div = document.getElementById('viz');
+  // console.log(document.body.scrollWidth, document.body.offsetWidth, document.body.clientWidth);
+  const sw = document.body.scrollWidth;
+  let isMobile = sw < 768;
+  console.log(isMobile);
+  let mobileImgsPerRow = 10;
+  let mobileImgWidth = sw / mobileImgsPerRow;
+
   for (let i = 0; i < loadedImages.length; i++) {
+    // let img = ;
+    if (isMobile) {
+      loadedImages[i].style.width = mobileImgWidth + 'px';
+    }
     div.appendChild(loadedImages[i]);
   }
-  setStatus(`Loaded ${loadedImages.length} tracks`);
-  if (!timestampEl.classList.contains("visible")) {
-    timestampEl.classList += "visible";
+
+  let dateFormat = 'MMMM do YYYY';
+  let mostRecentTrackTime = moment(trackList[0].date * 1000).format(dateFormat);
+  let oldestTrackTime = moment(trackList[trackList.length - 1].date * 1000).format(dateFormat);
+
+  setStatus(`Showing ${loadedImages.length} tracks from ${mostRecentTrackTime} to ${oldestTrackTime}`);
+  if (!timestampEl.classList.contains('visible')) {
+    timestampEl.classList += 'visible';
   }
   calculateTimestamp();
   isRendered = true;
 };
 
 const displayOnDOM2 = () => {
-  let div = document.getElementById("viz");
+  let div = document.getElementById('viz');
   for (let i = 0; i < trackList.length; i++) {
     let img = new Image();
     img.src = trackList[i].url;
@@ -242,22 +253,20 @@ const displayOnDOM2 = () => {
   }
   // setStatus(`Loaded ${loadedImages.length} tracks`);
   isRendered = true;
-  if (!timestampEl.classList.contains("visible")) {
-    timestampEl.classList += "visible";
+  if (!timestampEl.classList.contains('visible')) {
+    timestampEl.classList += 'visible';
   }
   calculateTimestamp();
 };
 
 const render = () => {
   isRendered = false;
-  setStatus("Rendering tracks");
+  setStatus('Rendering tracks');
   isUsingDOM ? displayOnDOM() : displayOnCanvas();
 };
 
 const clearRender = () => {
-  isUsingDOM
-    ? (document.getElementById("viz").innerHTML = "")
-    : ctx.clearRect(0, 0, canvas.width, canvas.height);
+  isUsingDOM ? (document.getElementById('viz').innerHTML = '') : ctx.clearRect(0, 0, canvas.width, canvas.height);
   isRendered = false;
 };
 
@@ -276,16 +285,16 @@ const calculateTimestamp = () => {
   } else {
     itemIndex = Math.floor(perc * trackList.length);
   }
-  let timestring = moment(trackList[itemIndex].date * 1000).format("MMMM YYYY");
+  let timestring = moment(trackList[itemIndex].date * 1000).format('MMMM YYYY');
   setTimestamp(timestring);
 };
 
 const cheekyComments = [
-  "Make some tea in the meantime.",
-  "Pet your dog in the meantime.",
-  "Go save the world in the meantime.",
-  "The tracks are saved in your browser, you won't have to do this again.",
-  "Almost there :)"
+  'Pet your dog in the meantime.',
+  "The tracks are saved in your browser, so you won't have to do this again.",
+  'Feel free to use this time to save the world.',
+  'Or make some tea?',
+  'Almost there :)'
 ];
 const getCheekyComment = progress => {
   return cheekyComments[Math.floor(progress * cheekyComments.length)];
@@ -298,8 +307,8 @@ const getCheekyComment = progress => {
 const getScrollPercent = () => {
   var h = document.documentElement,
     b = document.body,
-    st = "scrollTop",
-    sh = "scrollHeight";
+    st = 'scrollTop',
+    sh = 'scrollHeight';
   return (h[st] || b[st]) / ((h[sh] || b[sh]) - h.clientHeight);
 };
 
@@ -310,7 +319,11 @@ const getScrollPercent = () => {
   if (username && trackList.length > 0) {
     inputEl.value = username;
     fetchTracks();
-    // loadIntoMemory().then(() => render());
-    setStatus("Checking for any recently played tracks");
+    // loadImages(...trackList.map(t => t.url))
+    //   .then(imgs => {
+    //     loadedImages = imgs.map(i => i.res);
+    //   })
+    //   .then(() => render());
+    setStatus('Checking for any recently played tracks');
   }
 })();
