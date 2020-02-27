@@ -73,8 +73,8 @@ const loadFromLocalStorage = () => {
 let loadedImages = [];
 let totalPages = 0;
 let totalTracks = 0;
-let tracksPerPage = 200;
-const MAX_PAGES = 125;
+let TRACKS_PER_PAGE = 200;
+const MAX_PAGES = 375;
 
 let newTracksToAdd = [];
 let hasReachedSavedTrack = false;
@@ -83,7 +83,7 @@ let fetchController = new AbortController();
 let signal = fetchController.signal;
 
 const fetchTracks = (page = 1) => {
-  URL = `https://ws.audioscrobbler.com/2.0/?method=user.getrecenttracks&user=${username}&api_key=${API_KEY}&format=json&limit=${tracksPerPage}`;
+  URL = `https://ws.audioscrobbler.com/2.0/?method=user.getrecenttracks&user=${username}&api_key=${API_KEY}&format=json&limit=${TRACKS_PER_PAGE}`;
   fetch(`${URL}&page=${page}`, {
     method: 'GET',
     signal: signal
@@ -98,10 +98,10 @@ const fetchTracks = (page = 1) => {
     })
     .then(data => {
       if (!totalPages) {
-        totalTracks = Math.min(data.recenttracks['@attr'].total, MAX_PAGES * tracksPerPage);
+        totalTracks = Math.min(data.recenttracks['@attr'].total, MAX_PAGES * TRACKS_PER_PAGE);
         totalPages = Math.min(data.recenttracks['@attr'].totalPages, MAX_PAGES);
       }
-      setStatus(`Getting track ${page * tracksPerPage} of ${totalTracks}. ` + getCheekyComment(page / totalPages));
+      setStatus(`Getting track ${page * TRACKS_PER_PAGE} of ${totalTracks}. ` + getCheekyComment(page / totalPages));
 
       let patt = new RegExp('[^/]*$');
 
@@ -109,7 +109,7 @@ const fetchTracks = (page = 1) => {
         let track = data.recenttracks.track[i];
         if (!track.date) continue; // if the track is currently playing, there is no date
 
-        if (mostRecentSavedTrack && mostRecentSavedTrack.date == track.date.uts) {
+        if (mostRecentSavedTrack && mostRecentSavedTrack.d == track.date.uts) {
           hasReachedSavedTrack = true;
           break;
         }
@@ -117,8 +117,8 @@ const fetchTracks = (page = 1) => {
         let fileName = patt.exec(track.image[2]['#text'])[0];
 
         newTracksToAdd.push({
-          date: track.date.uts,
-          fileName: fileName
+          d: track.date.uts,
+          fn: fileName
         });
       }
 
@@ -139,6 +139,7 @@ const onFinishedGatheringData = () => {
     localStorage.setItem('username', username);
     localStorage.setItem('tracks', JSON.stringify(trackList));
   }
+  localStorage.setItem('visited', Date.now().toString());
 
   let prom = new Promise(resolve => {
     setTimeout(() => {
@@ -147,7 +148,7 @@ const onFinishedGatheringData = () => {
     }, 500);
   })
     .then(() =>
-      loadImages(...trackList.map(t => ALBUM_IMG_BASE_URL + t.fileName)).then(imgs => {
+      loadImages(...trackList.map(t => ALBUM_IMG_BASE_URL + t.fn)).then(imgs => {
         loadedImages = imgs.map(i => i.res);
       })
     )
@@ -232,8 +233,8 @@ const displayOnDOM = () => {
   }
 
   let dateFormat = 'MMMM do YYYY';
-  let mostRecentTrackTime = moment(trackList[0].date * 1000).format(dateFormat);
-  let oldestTrackTime = moment(trackList[trackList.length - 1].date * 1000).format(dateFormat);
+  let mostRecentTrackTime = moment(trackList[0].d * 1000).format(dateFormat);
+  let oldestTrackTime = moment(trackList[trackList.length - 1].d * 1000).format(dateFormat);
 
   setStatus(`Showing ${loadedImages.length} tracks from ${mostRecentTrackTime} to ${oldestTrackTime}`);
   if (!timestampEl.classList.contains('visible')) {
@@ -284,14 +285,16 @@ const calculateTimestamp = () => {
   } else {
     itemIndex = Math.floor(perc * trackList.length);
   }
-  let timestring = moment(trackList[itemIndex].date * 1000).format('MMMM YYYY');
+  let timestring = moment(trackList[itemIndex].d * 1000).format('MMMM YYYY');
   setTimestamp(timestring);
 };
 
 const cheekyComments = [
   "<br>The tracks are saved in your browser, so you'll only have to get the most recent ones next time you visit.",
   'Pet your dog while you wait.',
-  'Save the world in the meantime.',
+  'Call your mom?',
+  'Feel free to save the world in the meantime.',
+  'Text an old ex.',
   'Make some coffee.',
   'Almoooost theeree.'
 ];
@@ -318,7 +321,8 @@ const getScrollPercent = () => {
   if (username && trackList.length > 0) {
     inputEl.value = username;
     fetchTracks();
-    // loadImages(...trackList.map(t => t.url))
+
+    // loadImages(...trackList.map(t => ALBUM_IMG_BASE_URL + t.fn))
     //   .then(imgs => {
     //     loadedImages = imgs.map(i => i.res);
     //   })
