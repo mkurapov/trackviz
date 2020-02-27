@@ -21,6 +21,7 @@ window.addEventListener('load', () => inputEl.focus());
 
 inputEl.addEventListener('keydown', ev => {
   if (ev.keyCode == 13 && ev.target.value !== username) {
+    console.log('doing it');
     stopDataFetch();
     resetData();
     clearRender();
@@ -28,7 +29,8 @@ inputEl.addEventListener('keydown', ev => {
     if (ev.target.value == '') {
       setStatus(initalMessageHTML);
     } else {
-      username = ev.target.value;
+      username = ev.target.value.trim();
+      inputEl.value = ev.target.value.trim();
       fetchTracks();
     }
   }
@@ -74,7 +76,7 @@ let loadedImages = [];
 let totalPages = 0;
 let totalTracks = 0;
 let TRACKS_PER_PAGE = 200;
-const MAX_PAGES = 375;
+const MAX_PAGES = 3;
 
 let newTracksToAdd = [];
 let hasReachedSavedTrack = false;
@@ -92,8 +94,7 @@ const fetchTracks = (page = 1) => {
       if (res.ok) {
         return res.json();
       } else {
-        setStatus('Could not find user, or hit API limit :(');
-        throw new Error('Something went wrong');
+        onHandleError(res);
       }
     })
     .then(data => {
@@ -130,6 +131,30 @@ const fetchTracks = (page = 1) => {
     });
 };
 
+const onHandleError = res => {
+  console.log(res);
+  if (res.statusText == 'Forbidden') {
+    inputEl.value = '';
+    username = '';
+    setStatus('Please turn on your hidden your recent track visibility in Profile > Privacy & try again.');
+    return;
+  } else if (res.statusText == 'Not Found') {
+    setStatus('Could not find user with that name. Please check the spelling.');
+    return;
+  }
+
+  if (newTracksToAdd.length > 0) {
+    let prom = new Promise(resolve => {
+      setStatus('There was an error getting all of your tracks. But we got some of them.');
+      setTimeout(() => {
+        resolve();
+      }, 3000);
+    }).then(() => onFinishedGatheringData());
+  } else {
+    setStatus("There was an error getting all of your tracks. I'm a sorry Canadian. Please try again later.");
+  }
+};
+
 ALBUM_IMG_BASE_URL = 'https://lastfm.freetls.fastly.net/i/u/174s/';
 
 const onFinishedGatheringData = () => {
@@ -142,8 +167,8 @@ const onFinishedGatheringData = () => {
   localStorage.setItem('visited', Date.now().toString());
 
   let prom = new Promise(resolve => {
+    setStatus(`Rendering ${trackList.length} tracks`);
     setTimeout(() => {
-      setStatus(`Rendering ${trackList.length} tracks`);
       resolve();
     }, 500);
   })
@@ -176,6 +201,7 @@ const stopDataFetch = () => {
 };
 
 const resetData = () => {
+  username = '';
   localStorage.removeItem('tracks');
   localStorage.removeItem('username');
   loadedImages = [];
