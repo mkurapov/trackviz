@@ -167,8 +167,8 @@ const onFinishedGatheringData = () => {
   localStorage.setItem('visited', Date.now().toString());
 
   let prom = new Promise(resolve => {
-    setStatus(`Rendering ${trackList.length} tracks`);
     setTimeout(() => {
+      setStatus(`Rendering ${trackList.length} tracks`);
       resolve();
     }, 500);
   })
