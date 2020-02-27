@@ -21,7 +21,6 @@ window.addEventListener('load', () => inputEl.focus());
 
 inputEl.addEventListener('keydown', ev => {
   if (ev.keyCode == 13 && ev.target.value !== username) {
-    console.log('doing it');
     stopDataFetch();
     resetData();
     clearRender();
@@ -94,7 +93,8 @@ const fetchTracks = (page = 1) => {
       if (res.ok) {
         return res.json();
       } else {
-        onHandleError(res);
+        onHandleError(res, page);
+        throw new Error();
       }
     })
     .then(data => {
@@ -122,6 +122,8 @@ const fetchTracks = (page = 1) => {
           fileName = '2a96cbd8b46e442fc41c2b86b821562f.png';
         }
 
+        // loadImages([ALBUM_IMG_BASE_URL + fileName]).then(imgs => loadedImages.push(imgs[0].res)); worth a try later?
+
         newTracksToAdd.push({
           d: track.date.uts,
           fn: fileName
@@ -136,7 +138,7 @@ const fetchTracks = (page = 1) => {
     });
 };
 
-const onHandleError = res => {
+const onHandleError = (res, page) => {
   console.log(res);
   if (res.statusText == 'Forbidden') {
     inputEl.value = '';
@@ -144,26 +146,43 @@ const onHandleError = res => {
     setStatus('Please turn on your hidden your recent track visibility in Profile > Privacy & try again.');
     return;
   } else if (res.statusText == 'Not Found') {
-    setStatus('Could not find user with that name. Please check the spelling.');
-    return;
+    if (page == 1) {
+      setStatus('Could not find user with that name. Please check the spelling.');
+      return;
+    }
   }
 
+  // if a strange error slips, but we already got some tracks.
   if (newTracksToAdd.length > 0) {
     let prom = new Promise(resolve => {
-      setStatus('There was an error getting all of your tracks. But we got some of them.');
+      setStatus(
+        `There was an error getting all of your tracks. I'm a sorry Canadian. But we got ${newTracksToAdd.length} of them.`
+      );
       setTimeout(() => {
         resolve();
       }, 3000);
     }).then(() => onFinishedGatheringData());
   } else {
-    setStatus("There was an error getting all of your tracks. I'm a sorry Canadian. Please try again later.");
+    setStatus("There was an error getting your tracks. I'm a sorry Canadian. Please try again later.");
   }
 };
 
 ALBUM_IMG_BASE_URL = 'https://lastfm.freetls.fastly.net/i/u/174s/';
 
 const onFinishedGatheringData = () => {
-  setStatus(`Found ${newTracksToAdd.length} new track${newTracksToAdd.length == 1 ? '' : 's'}`);
+  if (trackList.length > 1) {
+    setStatus(
+      `Found ${newTracksToAdd.length} new track${newTracksToAdd.length == 1 ? '' : 's'}. Loading ${
+        trackList.length
+      } saved tracks.`
+    );
+  } else {
+    setStatus(
+      `Found ${newTracksToAdd.length} track${
+        newTracksToAdd.length == 1 ? '' : 's'
+      } in your Last.fm history. Storing them in your browser.`
+    );
+  }
   if (newTracksToAdd.length > 0) {
     trackList = [...newTracksToAdd, ...trackList];
     localStorage.setItem('username', username);
@@ -171,18 +190,22 @@ const onFinishedGatheringData = () => {
   }
   localStorage.setItem('visited', Date.now().toString());
 
-  let prom = new Promise(resolve => {
-    setTimeout(() => {
-      setStatus(`Rendering ${trackList.length} tracks`);
-      resolve();
-    }, 500);
-  })
-    .then(() =>
-      loadImages(...trackList.map(t => ALBUM_IMG_BASE_URL + t.fn)).then(imgs => {
-        loadedImages = imgs.map(i => i.res);
-      })
-    )
-    .then(() => render());
+  if (trackList.length > 0) {
+    let prom = new Promise(resolve => {
+      setTimeout(() => {
+        setStatus(`Rendering ${trackList.length} tracks`);
+        resolve();
+      }, 500);
+    })
+      .then(() =>
+        loadImages(...trackList.map(t => ALBUM_IMG_BASE_URL + t.fn)).then(imgs => {
+          loadedImages = imgs.map(i => i.res);
+        })
+      )
+      .then(() => render());
+  } else {
+    console.log('WE GOTT ISSUES');
+  }
 };
 
 const loadImages = (...paths) => Promise.all(paths.map(checkImage));
@@ -250,6 +273,8 @@ const displayOnCanvas = () => {
 };
 
 const displayOnDOM = () => {
+  // if (trackList)
+
   let div = document.getElementById('viz');
   // console.log(document.body.scrollWidth, document.body.offsetWidth, document.body.clientWidth);
   const sw = document.body.scrollWidth;
@@ -265,32 +290,26 @@ const displayOnDOM = () => {
     div.appendChild(loadedImages[i]);
   }
 
-  let dateFormat = 'MMMM Do YYYY';
+  if (trackList.length > 0) {
+    let dateFormat = 'MMMM Do YYYY';
 
-  let mostRecentTrackTime = moment(trackList[0].d * 1000).format(dateFormat);
-  let oldestTrackTime = moment(trackList[trackList.length - 1].d * 1000).format(dateFormat);
+    let mostRecentTrackTime = moment(trackList[0].d * 1000).format(dateFormat);
+    let oldestTrackTime = moment(trackList[trackList.length - 1].d * 1000).format(dateFormat);
 
-  setStatus(`Showing ${loadedImages.length} tracks from ${mostRecentTrackTime} to ${oldestTrackTime}`);
-  if (!timestampEl.classList.contains('visible')) {
-    timestampEl.classList += 'visible';
+    if (mostRecentTrackTime && oldestTrackTime) {
+      setStatus(`Showing ${loadedImages.length} tracks from ${mostRecentTrackTime} to ${oldestTrackTime}`);
+      if (!timestampEl.classList.contains('visible')) {
+        timestampEl.classList += 'visible';
+      }
+      calculateTimestamp();
+    } else {
+      console.log('COULD NOT GET TRACK TIMES');
+    }
+  } else {
+    console.log('CHANGED USER WHILE RENDERING');
   }
-  calculateTimestamp();
+
   isRendered = true;
-};
-
-const displayOnDOM2 = () => {
-  let div = document.getElementById('viz');
-  for (let i = 0; i < trackList.length; i++) {
-    let img = new Image();
-    img.src = trackList[i].url;
-    div.appendChild(img);
-  }
-  // setStatus(`Loaded ${loadedImages.length} tracks`);
-  isRendered = true;
-  if (!timestampEl.classList.contains('visible')) {
-    timestampEl.classList += 'visible';
-  }
-  calculateTimestamp();
 };
 
 const render = () => {
@@ -319,6 +338,7 @@ const calculateTimestamp = () => {
   } else {
     itemIndex = Math.floor(perc * trackList.length);
   }
+
   let timestring = moment(trackList[itemIndex].d * 1000).format('MMMM YYYY');
   setTimestamp(timestring);
 };
