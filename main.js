@@ -11,9 +11,10 @@ const setTimestamp = message => {
 
 const statusEl = document.getElementById('status');
 const setStatus = message => {
-  statusEl.innerText = message;
+  statusEl.innerHTML = message;
 };
 
+const initalMessageHTML = `Welcome.<br /><br />I wanted to have the experience of looking back at old photos, but for music.<br />This visualizes up to 25k of your most recent Last.fm tracks.<br />I hope you enjoy.`;
 // #region EVENT LISTENERS
 
 window.addEventListener('load', () => inputEl.focus());
@@ -25,7 +26,7 @@ inputEl.addEventListener('keydown', ev => {
     clearRender();
 
     if (ev.target.value == '') {
-      setStatus('Welcome');
+      setStatus(initalMessageHTML);
     } else {
       username = ev.target.value;
       fetchTracks();
@@ -73,7 +74,7 @@ let loadedImages = [];
 let totalPages = 0;
 let totalTracks = 0;
 let tracksPerPage = 200;
-const MAX_PAGES = 125;
+const MAX_PAGES = 1;
 
 let newTracksToAdd = [];
 let hasReachedSavedTrack = false;
@@ -288,9 +289,9 @@ const calculateTimestamp = () => {
 };
 
 const cheekyComments = [
-  "The tracks are saved in your browser, so you won't have to do this again.",
-  'Pet your dog in the meantime.',
-  'Feel free to use this time to save the world.',
+  "The tracks are saved in your browser, so you'll only have to get the most recent ones next time you visit.'",
+  'Pet your dog while you wait.',
+  'Or save the world in the meantime.',
   'Or make some tea?'
 ];
 const getCheekyComment = progress => {
