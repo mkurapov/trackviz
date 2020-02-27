@@ -179,6 +179,8 @@ const resetData = () => {
   localStorage.removeItem('tracks');
   localStorage.removeItem('username');
   loadedImages = [];
+  totalTracks = 0;
+  totalPages = 0;
   trackList = [];
   newTracksToAdd = [];
   mostRecentSavedTrack = null;
