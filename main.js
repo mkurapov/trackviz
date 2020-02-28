@@ -74,7 +74,7 @@ const loadFromLocalStorage = () => {
 let loadedImages = [];
 let totalPages = 0;
 let totalTracks = 0;
-let TRACKS_PER_PAGE = 200;
+const TRACKS_PER_PAGE = 200;
 const MAX_PAGES = 375;
 
 let newTracksToAdd = [];
@@ -82,6 +82,9 @@ let hasReachedSavedTrack = false;
 
 let fetchController = new AbortController();
 let signal = fetchController.signal;
+
+const MAX_RETRIES = 5;
+let retryCount = 0;
 
 const fetchTracks = (page = 1) => {
   URL = `https://ws.audioscrobbler.com/2.0/?method=user.getrecenttracks&user=${username}&api_key=${API_KEY}&format=json&limit=${TRACKS_PER_PAGE}`;
@@ -91,6 +94,7 @@ const fetchTracks = (page = 1) => {
   })
     .then(res => {
       if (res.ok) {
+        retryCount = 0;
         return res.json();
       } else {
         onHandleError(res, page);
@@ -117,7 +121,7 @@ const fetchTracks = (page = 1) => {
 
         let fileName = patt.exec(track.image[2]['#text'])[0];
 
-        // if missing album cover, do default lastfm
+        // if missing album cover, do default lastfm image
         if (!fileName) {
           fileName = '2a96cbd8b46e442fc41c2b86b821562f.png';
         }
@@ -152,11 +156,23 @@ const onHandleError = (res, page) => {
     }
   }
 
+  retryCount++;
+
+  if (retryCount < MAX_RETRIES) {
+    new Promise(resolve => {
+      console.log('retrying');
+      setTimeout(() => {
+        resolve();
+      }, 1000);
+    }).then(() => fetchTracks(page));
+    return;
+  }
+
   // if a strange error slips, but we already got some tracks.
   if (newTracksToAdd.length > 0) {
-    let prom = new Promise(resolve => {
+    new Promise(resolve => {
       setStatus(
-        `There was an error getting all of your tracks. I'm a sorry Canadian. But we got ${newTracksToAdd.length} of them.`
+        `There was an error getting all ${totalTracks} of your tracks. I'm a sorry Canadian. But we got ${newTracksToAdd.length} of them.`
       );
       setTimeout(() => {
         resolve();
@@ -191,7 +207,7 @@ const onFinishedGatheringData = () => {
   localStorage.setItem('visited', Date.now().toString());
 
   if (trackList.length > 0) {
-    let prom = new Promise(resolve => {
+    new Promise(resolve => {
       setTimeout(() => {
         setStatus(`Rendering ${trackList.length} tracks`);
         resolve();
@@ -232,9 +248,11 @@ const resetData = () => {
   username = '';
   localStorage.removeItem('tracks');
   localStorage.removeItem('username');
+  localStorage.removeItem('visited');
   loadedImages = [];
   totalTracks = 0;
   totalPages = 0;
+  retryCount = 0;
   trackList = [];
   newTracksToAdd = [];
   mostRecentSavedTrack = null;
@@ -307,6 +325,10 @@ const displayOnDOM = () => {
     }
   } else {
     console.log('CHANGED USER WHILE RENDERING');
+    setStatus(initalMessageHTML);
+    stopDataFetch();
+    resetData();
+    clearRender();
   }
 
   isRendered = true;
