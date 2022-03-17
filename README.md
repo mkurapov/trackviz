@@ -1,4 +1,5 @@
-This viz enerates a grid of all album art of each song played in your Last.fm account up to 75k tracks with month time stamps. 
-Tracks stores in localStorage, so only fetches the most recent ones next visit.
+# Last.fm Track History
 
-![MaxKrus data](/thumbnail.png)
+Wanting to see all the tracks I've listened to (in a scrollable format), I made a visualization that displays a Last.fm user's track history (up to 75k songs). Focused on making a clean, simple experience for mobile & desktop.
+
+![image](https://maxs.space/img/lastfm-viz.gif)
