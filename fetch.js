@@ -44,7 +44,18 @@ async function fetchTracks(username, totalPages, toDate) {
   const results = await Promise.all(promises);
   const pages = await Promise.all(
     results.map(async (res) => {
+      if (res.status === 404) {
+        throw new Error('Could not find user with that name. Please check the spelling.');
+      }
+
       const page = await res.json();
+
+      if (page.error === 17) {
+        throw new Error('Please turn on your hidden your recent track visibility in Profile > Privacy & try again.');
+      } else if (page.error) {
+        throw new Error(page.error.message);
+      }
+
       return page.recenttracks;
     })
   );
@@ -52,17 +63,3 @@ async function fetchTracks(username, totalPages, toDate) {
 
   return tracks;
 }
-
-const checkImage = (path) =>
-  new Promise((resolve) => {
-    const img = new Image();
-    img.onload = () => resolve(img);
-    img.onerror = () => {
-      img.src = `${ALBUM_IMG_BASE_URL}${DEFAULT_IMG}`;
-      resolve(img);
-    };
-
-    img.src = path;
-  });
-
-const loadImages = async (paths) => Promise.all(paths.map(checkImage));

@@ -107,9 +107,10 @@
       }
 
       #viz {
-        display: flex;
+        display: grid;
         position: absolute;
         width: 100%;
+        grid-template-columns: repeat(10, 1fr);
         flex-wrap: wrap;
         /* justify-content: center; */
         margin-top: 136px;
@@ -117,8 +118,10 @@
       }
 
       #viz > img {
+        width: 100%;
+        height: 100%;
         /* height: 64px; */
-        width: 4.31vw;
+        /* width: 4.31vw; */
       }
 
       #timestamp {
@@ -175,7 +178,7 @@
         #viz > img {
           /* height: 4vw; */
           /* height: 48px; */
-          width: 48px;
+          width: 100vw / 10
         }
 
         #status {
@@ -203,9 +206,9 @@
         }
       }
 
-      @media (min-width: 1920px) {
-        #viz > img {
-          width: 4.32vw;
+      @media (min-width: 1440px) {
+        #viz {
+          grid-template-columns: repeat(20, 1fr);
         }
       }
     </style>
@@ -229,6 +232,7 @@
     <div id="viz"></div>
     <a class="plug" target="_blank" href="https://maxs.space">made by max</a>
     <div id="timestamp">January 2020</div>
+    <script src="render.js"></script>
     <script src="fetch.js"></script>
     <script src="main.js"></script>
     <script src="moment.min.js"></script>
