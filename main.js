@@ -118,6 +118,7 @@ async function loadTracksAndDisplay(totalPages = 10) {
 
 (async () => {
   if (localStorage.getItem('version') !== '2') {
+    resetData();
     await loadTracksAndDisplay();
     localStorage.setItem('version', '2');
     return;
